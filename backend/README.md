@@ -93,3 +93,9 @@ suspend fun deleteSong(@Path("id") id: Int)
 
 - The Android frontend will be placed under `/android`.
 - This backend uses SQLite for simple local development.
+
+## Accessing songs from API
+
+```bash
+curl https://hitstercopywannabe.onrender.com/api/songs/
+```
