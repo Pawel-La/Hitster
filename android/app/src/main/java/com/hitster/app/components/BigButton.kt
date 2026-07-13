@@ -24,7 +24,6 @@ fun BigButton(
         onClick = onClick,
         border = BorderStroke(1.dp, Color.Gray),
         modifier = modifier
-            .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .height(90.dp),
         colors = ButtonDefaults.buttonColors(
