@@ -1,3 +1,5 @@
+import random
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,7 +21,7 @@ class HealthView(APIView):
 
 
 class PlaylistView(APIView):
-    """Returns the songs of a Spotify playlist fetched via the Spotify API."""
+    """Returns the songs of a Spotify playlist in random order, fetched via the Spotify API."""
 
     def get(self, request, playlist_id=None):
         if playlist_id is None:
@@ -28,6 +30,7 @@ class PlaylistView(APIView):
             client = SpotifyClient()
             playlist_items = client.fetch_playlist_items(playlist_id)
             songs = process_playlist_items(playlist_items)
+            random.shuffle(songs)
         except ValueError as e:
             return Response(
                 {"detail": str(e)},
