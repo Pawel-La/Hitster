@@ -1,15 +1,14 @@
-from dataclasses import dataclass
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import base64
 import os
 import secrets
-from pathlib import Path
-import base64
-from urllib.parse import parse_qs, urlparse
 import webbrowser
+from dataclasses import dataclass
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from dotenv import load_dotenv
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(PROJECT_ROOT / ".env")
@@ -18,6 +17,9 @@ BASE_AUTH_URL = "https://accounts.spotify.com/api/token"
 BASE_API_URL = "https://api.spotify.com/v1"
 
 captured = {}
+
+class RefreshTokenRequestException(Exception):
+    pass
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -56,7 +58,7 @@ def _get_auth_data_from_settings() -> AuthData:
     if not client_id or not client_secret or not redirect_uri:
         raise ValueError("Please set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET and REDIRECT_URI in your /.env file.")
 
-    encoded_client_details = f"{client_id}:{client_secret}".encode("utf-8")
+    encoded_client_details = f"{client_id}:{client_secret}".encode()
     return AuthData(
         client_id=client_id,
         encoded_client_details=encoded_client_details,
@@ -95,7 +97,7 @@ def _make_request(code: str, auth_data: AuthData) -> str:
         data = response.json()
         return data.get("refresh_token")
     except requests.exceptions.RequestException as e:
-        raise Exception(f"Failed to request access token: {str(e)}")
+        raise RefreshTokenRequestException(f"Failed to request access token: {e!s}")
 
 if __name__ == "__main__":
     refresh_token = get_spotify_refresh_token()

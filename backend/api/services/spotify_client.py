@@ -1,12 +1,11 @@
-from dataclasses import dataclass
+import base64
 import os
 import time
+from dataclasses import dataclass
 from pathlib import Path
-import base64
 
 import requests
 from dotenv import load_dotenv
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(PROJECT_ROOT / ".env")
@@ -16,6 +15,9 @@ _token_cache = {
     "token": None,
     "expires_at": 0
 }
+
+class SpotifyClientException(Exception):
+    pass
 
 class SpotifyClient:
     """Service for interacting with Spotify API"""
@@ -29,7 +31,7 @@ class SpotifyClient:
         if not refresh_token:
             raise ValueError("SPOTIFY_REFRESH_TOKEN is not set. Run `get_spotify_refresh_token` to get new refresh token.")
         
-        self.CLIENT_CREDENTIALS = f"{client_id}:{client_secret}".encode("utf-8")
+        self.CLIENT_CREDENTIALS = f"{client_id}:{client_secret}".encode()
         self.REFRESH_TOKEN = refresh_token
 
         self.BASE_AUTH_URL = "https://accounts.spotify.com/api/token"
@@ -42,7 +44,7 @@ class SpotifyClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to fetch playlist data: {str(e)}")
+            raise SpotifyClientException(f"Failed to fetch playlist data: {e!s}")
         
     def _get_default_headers(self) -> dict:
         return {
@@ -80,7 +82,7 @@ class SpotifyClient:
 
             return data.get("access_token")
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to refresh access token: {str(e)}")
+            raise SpotifyClientException(f"Failed to refresh access token: {e!s}")
     
     def _save_token_details(self, data: dict) -> None:
         _token_cache["token"] = data.get("access_token")
