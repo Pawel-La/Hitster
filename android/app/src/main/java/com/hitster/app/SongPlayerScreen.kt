@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.zIndex
 import com.hitster.app.components.BigButton
 import com.hitster.app.components.PlaybackControls
 import com.hitster.app.components.RevealPopUp
@@ -18,6 +19,7 @@ fun SongPlayerScreen(
     viewModel: SongPlayerViewModel = viewModel()
 ) {
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
     var revealed by remember { mutableStateOf(false)}
 
     Box(
@@ -25,6 +27,25 @@ fun SongPlayerScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Display error message if any
+        errorMessage?.let {
+            androidx.compose.material3.Surface(
+                color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp)
+                    .zIndex(1f) // Ensure it stays on top
+            ) {
+                androidx.compose.material3.Text(
+                    text = it,
+                    color = androidx.compose.ui.graphics.Color.Yellow,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
         BigButton(
             text = if (revealed) "Next" else "Skip",
             onClick = {
