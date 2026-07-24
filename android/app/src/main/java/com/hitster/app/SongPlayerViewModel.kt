@@ -1,21 +1,35 @@
 package com.hitster.app
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
-class SongPlayerViewModel : ViewModel() {
+class SongPlayerViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = SongRepository(application)
+    private val songs = repository.loadSongs()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _currentSongIndex = MutableStateFlow(0)
+    val currentSong: StateFlow<Song?> = _currentSongIndex.map { index ->
+        if (songs.isNotEmpty()) songs[index] else null
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private var isTrackLoaded = false
-    private val hardcodedTrackUri = "spotify:track:0pqnGHJpmpxLKifKRmU6WP" // Imagine Dragons - Believer
 
     private fun playTrack() {
-        SpotifyManager.play(hardcodedTrackUri)
-        _isPlaying.value = true
-        isTrackLoaded = true
+        currentSong.value?.let { song ->
+            SpotifyManager.play(song.uri)
+            _isPlaying.value = true
+            isTrackLoaded = true
+        }
     }
 
     fun togglePlayPause() {
@@ -29,6 +43,13 @@ class SongPlayerViewModel : ViewModel() {
                 SpotifyManager.resume()
                 _isPlaying.value = true
             }
+        }
+    }
+
+    fun nextSong() {
+        if (songs.isNotEmpty()) {
+            _currentSongIndex.value = (_currentSongIndex.value + 1) % songs.size
+            reset()
         }
     }
 

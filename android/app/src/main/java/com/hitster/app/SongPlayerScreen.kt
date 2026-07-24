@@ -19,8 +19,9 @@ fun SongPlayerScreen(
     viewModel: SongPlayerViewModel = viewModel()
 ) {
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val currentSong by viewModel.currentSong.collectAsState()
     val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
-    var revealed by remember { mutableStateOf(false)}
+    var revealed by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -50,7 +51,7 @@ fun SongPlayerScreen(
             text = if (revealed) "Next" else "Skip",
             onClick = {
                 revealed = false
-                viewModel.reset()
+                viewModel.nextSong()
             },
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -65,11 +66,11 @@ fun SongPlayerScreen(
                 .fillMaxWidth()
         )
 
-        if (revealed) {
+        if (revealed && currentSong != null) {
             RevealPopUp(
-                year = 2017,
-                artist = "Imagine Dragons",
-                title = "Believer",
+                year = currentSong!!.year,
+                artist = currentSong!!.artist,
+                title = currentSong!!.title,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
