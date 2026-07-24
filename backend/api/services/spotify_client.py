@@ -47,7 +47,7 @@ class SpotifyClient:
                 response.raise_for_status()
                 data = response.json()
                 items.extend(data["items"])
-                url = data["next"]  # Spotify returns a full URL for the next page, or null when done
+                url = data["next"]
             return items
         except requests.exceptions.RequestException as e:
             raise SpotifyClientException(f"Failed to fetch playlist data: {e!s}")
