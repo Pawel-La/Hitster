@@ -1,4 +1,4 @@
-package com.hitster.app
+package com.hitster.app.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +18,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             BeforePlayScreen(onPlayClick = { navController.navigate("song_player") })
         }
         composable("song_player") {
-            SongPlayerScreen()
+            SongPlayerScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

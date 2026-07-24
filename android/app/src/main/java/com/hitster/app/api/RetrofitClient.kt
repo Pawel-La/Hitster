@@ -1,0 +1,16 @@
+package com.hitster.app.api
+
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+object RetrofitClient {
+    private const val BASE_URL = "https://hitstercopywannabe.onrender.com/"
+
+    val instance: HitsterApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(HitsterApi::class.java)
+    }
+}
