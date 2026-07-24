@@ -21,14 +21,14 @@ class HealthView(APIView):
 class PlaylistView(APIView):
     """Returns the songs of a Spotify playlist fetched via the Spotify API."""
 
-    def get(self, request):
-        playlist_id = request.query_params.get("playlist_id", DEFAULT_PLAYLIST_ID)
+    def get(self, request, playlist_id=None):
+        if playlist_id is None:
+            playlist_id = request.query_params.get("playlist_id", DEFAULT_PLAYLIST_ID)
         try:
             client = SpotifyClient()
             playlist_items = client.fetch_playlist_items(playlist_id)
             songs = process_playlist_items(playlist_items["items"])
         except ValueError as e:
-            # Missing Spotify credentials / configuration.
             return Response(
                 {"detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
