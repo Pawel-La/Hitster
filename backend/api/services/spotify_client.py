@@ -37,12 +37,18 @@ class SpotifyClient:
         self.BASE_AUTH_URL = "https://accounts.spotify.com/api/token"
         self.BASE_API_URL = "https://api.spotify.com/v1"
     
-    def fetch_playlist_items(self, playlist_id: str) -> dict:
+    def fetch_playlist_items(self, playlist_id: str) -> list[dict]:
         try:
             headers = self._get_default_headers()
-            response = requests.get(f"{self.BASE_API_URL}/playlists/{playlist_id}/items", headers=headers)
-            response.raise_for_status()
-            return response.json()
+            url = f"{self.BASE_API_URL}/playlists/{playlist_id}/items?limit=50"
+            items: list[dict] = []
+            while url:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                items.extend(data["items"])
+                url = data["next"]  # Spotify returns a full URL for the next page, or null when done
+            return items
         except requests.exceptions.RequestException as e:
             raise SpotifyClientException(f"Failed to fetch playlist data: {e!s}")
         
@@ -117,15 +123,3 @@ def process_playlist_items(items: list[dict]) -> list[Song]:
 
 def get_year_from_release_date(date: str):
     return date.split('-')[0]
-
-if __name__ == "__main__":
-    client = SpotifyClient()
-    playlist_id = "5GsuH4JNT7uiPGSKArlteE"
-    
-    playlist_items = client.fetch_playlist_items(playlist_id)
-    songs = process_playlist_items(playlist_items["items"])
-
-    for song in songs:
-        print(song)
-    
-    print(f"Number of songs collected: {len(playlist_items["items"])}")

@@ -27,7 +27,7 @@ class PlaylistView(APIView):
         try:
             client = SpotifyClient()
             playlist_items = client.fetch_playlist_items(playlist_id)
-            songs = process_playlist_items(playlist_items["items"])
+            songs = process_playlist_items(playlist_items)
         except ValueError as e:
             return Response(
                 {"detail": str(e)},
