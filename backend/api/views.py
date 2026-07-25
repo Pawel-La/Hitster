@@ -1,11 +1,10 @@
 import random
 
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Song
-from .serializers import PlaylistSongSerializer, SongSerializer
+from .serializers import PlaylistSongSerializer
 from .services.spotify_client import (
     SpotifyClient,
     SpotifyClientException,
@@ -13,12 +12,6 @@ from .services.spotify_client import (
 )
 
 DEFAULT_PLAYLIST_ID = "5GsuH4JNT7uiPGSKArlteE"
-
-
-class HealthView(APIView):
-    def get(self, request):
-        return Response({"status": "ok", "message": "Hitster backend is running."})
-
 
 class PlaylistView(APIView):
     """Returns the songs of a Spotify playlist in random order, fetched via the Spotify API."""
@@ -44,13 +37,3 @@ class PlaylistView(APIView):
 
         serializer = PlaylistSongSerializer(songs, many=True)
         return Response(serializer.data)
-
-
-class SongListCreateView(generics.ListCreateAPIView):
-    queryset = Song.objects.all().order_by("-created_at")
-    serializer_class = SongSerializer
-
-
-class SongDetailView(generics.RetrieveDestroyAPIView):
-    queryset = Song.objects.all()
-    serializer_class = SongSerializer
