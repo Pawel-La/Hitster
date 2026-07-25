@@ -25,7 +25,6 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
-    val songs: StateFlow<List<Song>> = _songs.asStateFlow()
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
