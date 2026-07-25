@@ -18,6 +18,10 @@ enum class UiState {
     IDLE, LOADING, SUCCESS, ERROR
 }
 
+enum class GameMode {
+    EASY, HARD
+}
+
 class SongPlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = SongRepository()
     
@@ -28,6 +32,12 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+
+    private val _gameMode = MutableStateFlow(GameMode.EASY)
+    val gameMode: StateFlow<GameMode> = _gameMode.asStateFlow()
+
+    private val _hardModeDurationSeconds = MutableStateFlow(30)
+    val hardModeDurationSeconds: StateFlow<Int> = _hardModeDurationSeconds.asStateFlow()
 
     private val _currentSongIndex = MutableStateFlow(0)
     val currentSong: StateFlow<Song?> = combine(_currentSongIndex, _songs) { index, songsList ->
@@ -108,5 +118,13 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         _songs.value = emptyList()
         _currentSongIndex.value = 0
         _uiState.value = UiState.IDLE
+    }
+
+    fun setGameMode(mode: GameMode) {
+        _gameMode.value = mode
+    }
+
+    fun setHardModeDuration(seconds: Int) {
+        _hardModeDurationSeconds.value = seconds
     }
 }
