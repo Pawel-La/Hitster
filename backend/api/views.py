@@ -4,9 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.services.helpers import process_playlist_items
+from api.services.helpers import process_playlist_infos, process_playlist_items
 
-from .serializers import PlaylistSongSerializer
+from .serializers import PlaylistInfoSerializer, PlaylistSongSerializer
 from .services.maybe_fill_up_playlist import maybe_fill_up_playlist
 from .services.spotify_client import (
     SpotifyClient,
@@ -61,3 +61,28 @@ class PlaylistView(APIView):
             return int(request.query_params.get("count", DEFAULT_PLAYLIST_SIZE))
         except (TypeError, ValueError):
             return DEFAULT_PLAYLIST_SIZE
+
+
+class CurrentUserPlaylistsView(APIView):
+    """Returns the current user's playlists, fetched via the Spotify API."""
+
+    def get(self, request):
+        try:
+            client = SpotifyClient()
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            playlists = client.fetch_current_user_playlists()
+        except SpotifyClientException as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        playlist_infos = process_playlist_infos(playlists)
+        serializer = PlaylistInfoSerializer(playlist_infos, many=True)
+        return Response(serializer.data)
