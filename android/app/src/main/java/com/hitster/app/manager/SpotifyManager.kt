@@ -9,6 +9,7 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import androidx.activity.result.ActivityResultLauncher
+import com.spotify.protocol.types.Track
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -25,6 +26,11 @@ object SpotifyManager {
     private const val REDIRECT_URI = "http://127.0.0.1:3000"
 
     private var spotifyAppRemote: SpotifyAppRemote? = null
+    private var requestedUri: String? = null
+    private var isRequestedTrackStarted = false
+
+    private val _isSongFinished = MutableStateFlow(false)
+    val isSongFinished: StateFlow<Boolean> = _isSongFinished
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
@@ -58,7 +64,6 @@ object SpotifyManager {
             AuthorizationResponse.Type.ERROR -> {
                 val error = response.error ?: "Unknown auth error"
                 Log.e(TAG, "Auth error: $error")
-                Log.e(TAG, "Full Auth Response: ${response.state}, ${response.code}")
                 _lastErrorMessage.value = "Auth Failed: $error (Check SHA-1/Redirect URI)"
             }
             else -> {
@@ -72,7 +77,7 @@ object SpotifyManager {
      * Step 3: Connect to the App Remote once authorized.
      */
     fun connect(context: Context) {
-        if (spotifyAppRemote != null && spotifyAppRemote!!.isConnected) {
+        if (spotifyAppRemote?.isConnected == true) {
             Log.d(TAG, "Already connected to Spotify")
             return
         }
@@ -85,60 +90,99 @@ object SpotifyManager {
             .showAuthView(true)
             .build()
 
-        SpotifyAppRemote.connect(context, connectionParams, object : Connector.ConnectionListener {
-            override fun onConnected(appRemote: SpotifyAppRemote) {
-                spotifyAppRemote = appRemote
-                _isConnected.value = true
-                _lastErrorMessage.value = null
-                Log.d(TAG, "Connected to Spotify successfully!")
-                
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(context, "Connected to Spotify!", Toast.LENGTH_SHORT).show()
-                }
+        SpotifyAppRemote.connect(context, connectionParams, createConnectionListener(context))
+    }
 
-                // Log player state to verify session
-                appRemote.playerApi.subscribeToPlayerState().setEventCallback { state ->
-                    Log.d(TAG, "Player State: track=${state.track?.name}, isPaused=${state.isPaused}")
-                }
-            }
+    private fun createConnectionListener(context: Context) = object : Connector.ConnectionListener {
+        override fun onConnected(appRemote: SpotifyAppRemote) {
+            spotifyAppRemote = appRemote
+            _isConnected.value = true
+            _lastErrorMessage.value = null
+            Log.d(TAG, "Connected to Spotify successfully!")
+            
+            showToast(context, "Connected to Spotify!")
+            setupPlayerStateSubscription(appRemote)
+        }
 
-            override fun onFailure(throwable: Throwable) {
-                val errorMsg = throwable.message ?: "Unknown error"
-                Log.e(TAG, "Failed to connect to Spotify: $errorMsg", throwable)
-                _isConnected.value = false
-                _lastErrorMessage.value = "Connection Failed: $errorMsg"
+        override fun onFailure(throwable: Throwable) {
+            val errorMsg = throwable.message ?: "Unknown error"
+            Log.e(TAG, "Failed to connect to Spotify: $errorMsg", throwable)
+            _isConnected.value = false
+            _lastErrorMessage.value = "Connection Failed: $errorMsg"
+        }
+    }
+
+    private fun setupPlayerStateSubscription(appRemote: SpotifyAppRemote) {
+        appRemote.playerApi.subscribeToPlayerState().setEventCallback { state ->
+            val track = state.track
+            Log.d(TAG, "Player State: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}")
+            
+            if (track != null && requestedUri != null) {
+                handleAutoplayDetection(track, state.isPaused)
             }
-        })
+        }
+    }
+
+    private fun handleAutoplayDetection(track: Track, isPaused: Boolean) {
+        if (track.uri == requestedUri) {
+            isRequestedTrackStarted = true
+            _isSongFinished.value = false
+        } else if (isRequestedTrackStarted && !isPaused) {
+            // Track changed after it had started, and it's not paused.
+            // This is likely Spotify's Autoplay kicking in.
+            pause()
+            isRequestedTrackStarted = false
+            _isSongFinished.value = true
+            Log.d(TAG, "Autoplay detected and paused.")
+        }
     }
 
     fun disconnect() {
         spotifyAppRemote?.let {
             SpotifyAppRemote.disconnect(it)
             spotifyAppRemote = null
+            resetState()
             _isConnected.value = false
             Log.d(TAG, "Disconnected from Spotify")
         }
     }
 
+    fun resetState() {
+        requestedUri = null
+        isRequestedTrackStarted = false
+        _isSongFinished.value = false
+    }
+
     fun play(uri: String) {
         Log.d(TAG, "Attempting to play: $uri")
-        if (spotifyAppRemote == null) {
+        val remote = spotifyAppRemote
+        if (remote == null) {
             Log.e(TAG, "Cannot play: SpotifyAppRemote is null")
             _lastErrorMessage.value = "Playback Error: Not Connected"
             return
         }
         
-        spotifyAppRemote?.playerApi?.play(uri)?.setResultCallback {
-            Log.d(TAG, "Play command sent successfully for $uri")
-        }?.setErrorCallback { error ->
-            val msg = error.message ?: "Unknown playback error"
-            Log.e(TAG, "Playback Error: $msg", error)
-            _lastErrorMessage.value = "Playback Error: $msg"
-            
-            // If it's a "Spotify app not running" issue, suggest opening Spotify
-            if (msg.contains("Spotify app not running", ignoreCase = true)) {
-                 _lastErrorMessage.value = "Error: Open Spotify app first!"
-            }
+        prepareForNewTrack(uri)
+        
+        remote.playerApi.play(uri)
+            .setResultCallback { Log.d(TAG, "Play command sent successfully for $uri") }
+            .setErrorCallback { error -> handlePlaybackError(error) }
+    }
+
+    private fun prepareForNewTrack(uri: String) {
+        requestedUri = uri
+        isRequestedTrackStarted = false
+        _isSongFinished.value = false
+    }
+
+    private fun handlePlaybackError(error: Throwable) {
+        val msg = error.message ?: "Unknown playback error"
+        Log.e(TAG, "Playback Error: $msg", error)
+        
+        _lastErrorMessage.value = if (msg.contains("Spotify app not running", ignoreCase = true)) {
+            "Error: Open Spotify app first!"
+        } else {
+            "Playback Error: $msg"
         }
     }
 
@@ -160,5 +204,11 @@ object SpotifyManager {
     fun seekToRelativePosition(milliseconds: Long) {
         Log.d(TAG, "Seeking relative: $milliseconds")
         spotifyAppRemote?.playerApi?.seekToRelativePosition(milliseconds)
+    }
+
+    private fun showToast(context: Context, message: String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 }

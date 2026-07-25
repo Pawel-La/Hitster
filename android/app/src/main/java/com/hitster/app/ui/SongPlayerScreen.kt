@@ -26,6 +26,7 @@ fun SongPlayerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val isSongFinished by viewModel.isSongFinished.collectAsState()
     val currentSong by viewModel.currentSong.collectAsState()
     val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
     var revealed by remember { mutableStateOf(false) }
@@ -105,6 +106,7 @@ fun SongPlayerScreen(
 
                     PlaybackControls(
                         isPlaying = isPlaying,
+                        isSongFinished = isSongFinished,
                         onPlayPauseToggle = { viewModel.togglePlayPause() },
                         onRewind = { viewModel.rewind() },
                         onForward = { viewModel.fastForward() },
