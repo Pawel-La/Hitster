@@ -31,7 +31,8 @@ fun PlaybackControls(
     onRewind: () -> Unit,
     onForward: () -> Unit,
     onReplay: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSongFinished: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -50,7 +51,8 @@ fun PlaybackControls(
                 Icon(
                     imageVector = Icons.Default.Replay,
                     contentDescription = "Replay",
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
+                    tint = Color.White
                 )
             }
         }
@@ -60,32 +62,44 @@ fun PlaybackControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onRewind) {
+            IconButton(
+                onClick = onRewind,
+                enabled = !isSongFinished
+            ) {
                 Icon(
                     imageVector = Icons.Default.FastRewind,
                     contentDescription = "Rewind",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    tint = if (isSongFinished) Color.Gray else Color.White
                 )
             }
 
             // adjust this width to bring them even closer or further apart
             Spacer(modifier = Modifier.width(10.dp))
 
-            IconButton(onClick = onPlayPauseToggle) {
+            IconButton(
+                onClick = onPlayPauseToggle,
+                enabled = !isSongFinished
+            ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = if (isPlaying) "Pause" else "Play",
-                    modifier = Modifier.size(160.dp)
+                    modifier = Modifier.size(160.dp),
+                    tint = if (isSongFinished) Color.Gray else Color.White
                 )
             }
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            IconButton(onClick = onForward) {
+            IconButton(
+                onClick = onForward,
+                enabled = !isSongFinished
+            ) {
                 Icon(
                     imageVector = Icons.Default.FastForward,
                     contentDescription = "Forward",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    tint = if (isSongFinished) Color.Gray else Color.White
                 )
             }
         }

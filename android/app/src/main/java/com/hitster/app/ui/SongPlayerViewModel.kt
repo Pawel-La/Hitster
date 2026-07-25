@@ -34,6 +34,8 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         if (songsList.isNotEmpty()) songsList[index % songsList.size] else null
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val isSongFinished: StateFlow<Boolean> = SpotifyManager.isSongFinished
+
     private var isTrackLoaded = false
 
     fun fetchSongs() {
@@ -78,6 +80,7 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         if (songsList.isNotEmpty()) {
             _currentSongIndex.value = (_currentSongIndex.value + 1) % songsList.size
             reset()
+            playTrack()
         }
     }
 
@@ -90,18 +93,13 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun replay() {
-        if (!isTrackLoaded) {
-            playTrack()
-        } else {
-            SpotifyManager.seekTo(0)
-            SpotifyManager.resume()
-            _isPlaying.value = true
-        }
+        playTrack()
     }
 
     fun reset() {
         _isPlaying.value = false
         SpotifyManager.pause()
+        SpotifyManager.resetState()
         isTrackLoaded = false
     }
 
