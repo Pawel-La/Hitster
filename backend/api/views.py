@@ -20,10 +20,7 @@ DEFAULT_PLAYLIST_SIZE = 150
 class PlaylistView(APIView):
     """Returns the songs of a Spotify playlist in random order, fetched via the Spotify API."""
 
-    def get(self, request, playlist_id=None):
-        if playlist_id is None:
-            playlist_id = request.query_params.get("playlist_id", DEFAULT_PLAYLIST_ID)
-
+    def get(self, request, playlist_id=DEFAULT_PLAYLIST_ID):
         count = self._get_count(request)
 
         try:

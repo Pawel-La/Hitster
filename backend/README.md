@@ -53,6 +53,16 @@ python -m api.services.get_spotify_refresh_token
 - `GET /api/playlist/` — returns the songs of the default Spotify playlist.
 - `GET /api/playlist/<playlist_id>/` — returns the songs of the given Spotify playlist.
 
+Songs are always returned in random order.
+
+### Query parameters
+
+- `count` — target number of songs. If the requested playlist has fewer than `count` songs, it is topped up with songs from a backup playlist to reach `count`; if it already has at least `count`, it is returned as-is. Example: `GET /api/playlist/?count=100`.
+
+### Fill-up behavior
+
+When a playlist is shorter than `count`, songs are bucketed by release-year period, and backup songs matching each period are added so the periods keep roughly the same proportions as the original playlist.
+
 ### Playlist response
 
 Each song fetched from Spotify is serialized as:
