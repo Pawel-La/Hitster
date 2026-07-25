@@ -37,11 +37,6 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
 
     private var isTrackLoaded = false
 
-    init {
-        // We no longer fetch automatically on init
-        // fetchSongs()
-    }
-
     fun fetchSongs() {
         if (_uiState.value == UiState.LOADING || _uiState.value == UiState.SUCCESS) return
         

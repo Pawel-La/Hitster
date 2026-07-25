@@ -8,17 +8,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.zIndex
 import com.hitster.app.components.BigButton
 import com.hitster.app.components.PlaybackControls
 import com.hitster.app.components.RevealPopUp
+import com.hitster.app.components.ExitGameDialog
+import com.hitster.app.components.SpotifyErrorDisplay
+import com.hitster.app.components.LoadingScreen
+import com.hitster.app.components.LoadingErrorScreen
 import com.hitster.app.manager.SpotifyManager
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 
 @Composable
 fun SongPlayerScreen(
@@ -38,24 +36,13 @@ fun SongPlayerScreen(
     }
 
     if (showExitDialog) {
-        AlertDialog(
-            onDismissRequest = { showExitDialog = false },
-            title = { Text(text = "Exit Game?") },
-            text = { Text(text = "Are you sure you want to exit? Your progress will be lost and the playlist will be reset.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showExitDialog = false
-                    viewModel.hardReset()
-                    onNavigateBack()
-                }) {
-                    Text("Exit")
-                }
+        ExitGameDialog(
+            onConfirm = {
+                showExitDialog = false
+                viewModel.hardReset()
+                onNavigateBack()
             },
-            dismissButton = {
-                TextButton(onClick = { showExitDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showExitDialog = false }
         )
     }
 
@@ -70,52 +57,21 @@ fun SongPlayerScreen(
     ) {
         when (uiState) {
             UiState.LOADING -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Loading playlist...",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+                LoadingScreen(modifier = Modifier.align(Alignment.Center))
             }
             UiState.ERROR -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Failed to load playlist",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    BigButton(text = "Retry", onClick = { viewModel.fetchSongs() })
-                }
+                LoadingErrorScreen(
+                    onRetry = { viewModel.fetchSongs() },
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
             UiState.SUCCESS, UiState.IDLE -> {
                 // Display error message if any (e.g. Spotify connection)
                 errorMessage?.let {
-                    androidx.compose.material3.Surface(
-                        color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(16.dp)
-                            .zIndex(1f) // Ensure it stays on top
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = it,
-                            color = androidx.compose.ui.graphics.Color.Yellow,
-                            style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
+                    SpotifyErrorDisplay(
+                        errorMessage = it,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
                 
                 if (uiState == UiState.SUCCESS) {
