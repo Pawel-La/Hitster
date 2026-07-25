@@ -29,3 +29,21 @@ def process_playlist_items(items: list[dict]) -> list[Song]:
 
 def _get_year_from_release_date(date: str):
     return date.split('-')[0]
+
+
+@dataclass
+class PlaylistInfo:
+    id: str
+    name: str
+    images: list[dict]
+
+
+def process_playlist_infos(playlists: list[dict]) -> list[PlaylistInfo]:
+    return [
+        PlaylistInfo(
+            id=playlist["id"],
+            name=playlist["name"],
+            images=playlist.get("images") or [],
+        )
+        for playlist in playlists
+    ]

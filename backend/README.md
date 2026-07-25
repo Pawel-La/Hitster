@@ -52,6 +52,7 @@ python -m api.services.get_spotify_refresh_token
 
 - `GET /api/playlist/` — returns the songs of the default Spotify playlist.
 - `GET /api/playlist/<playlist_id>/` — returns the songs of the given Spotify playlist.
+- `GET /api/current_user_playlists/` — returns the current user's playlists (only those they own), suitable for choosing a playlist to play.
 
 Songs are always returned in random order.
 
@@ -75,6 +76,22 @@ Each song fetched from Spotify is serialized as:
   "year": 1999
 }
 ```
+
+### Current user playlists response
+
+Each playlist is serialized as:
+
+```json
+{
+  "id": "41241241412412414",
+  "name": "Playlist name",
+  "images": [
+    { "url": "https://i.scdn.co/image/...", "height": 640, "width": 640 }
+  ]
+}
+```
+
+Only playlists the user owns or collaborates on are returned; followed playlists are excluded. Image `height`/`width` may be `null` when Spotify does not provide them.
 
 ## Android integration
 
@@ -115,4 +132,5 @@ val retrofit = Retrofit.Builder()
 ```bash
 curl https://hitstercopywannabe.onrender.com/api/playlist/
 curl https://hitstercopywannabe.onrender.com/api/playlist/[playlist_id]/
+curl https://hitstercopywannabe.onrender.com/api/current_user_playlists/
 ```

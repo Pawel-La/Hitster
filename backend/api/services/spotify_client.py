@@ -35,11 +35,42 @@ class SpotifyClient:
 
         self.BASE_AUTH_URL = "https://accounts.spotify.com/api/token"
         self.BASE_API_URL = "https://api.spotify.com/v1"
+        self.user_id = None
     
     def fetch_playlist_items(self, playlist_id: str) -> list[dict]:
+        return self.query(
+            url=f"{self.BASE_API_URL}/playlists/{playlist_id}/items?limit=50",
+            error_message="Failed to fetch playlist data",
+        )
+
+    def fetch_current_user_playlists(self) -> list[dict]:
+        playlists = self.query(
+            url=f"{self.BASE_API_URL}/me/playlists?limit=50",
+            error_message="Failed to fetch current user's playlists",
+        )
+
+        if self.user_id is None:
+            self.user_id = self.fetch_current_user_id()
+
+        return [
+            playlist
+            for playlist in playlists
+            if playlist.get("owner", {}).get("id") == self.user_id
+        ]
+
+    def fetch_current_user_id(self) -> str:
         try:
             headers = self._get_default_headers()
-            url = f"{self.BASE_API_URL}/playlists/{playlist_id}/items?limit=50"
+            response = requests.get(f"{self.BASE_API_URL}/me", headers=headers)
+            response.raise_for_status()
+            return response.json()["id"]
+        except requests.exceptions.RequestException as e:
+            raise SpotifyClientException(f"Failed to fetch current user's profile: {e!s}")
+
+    def query(self, url: str, error_message: str) -> list[dict]:
+        try:
+            headers = self._get_default_headers()
+
             items: list[dict] = []
             while url:
                 response = requests.get(url, headers=headers)
@@ -49,8 +80,8 @@ class SpotifyClient:
                 url = data["next"]
             return items
         except requests.exceptions.RequestException as e:
-            raise SpotifyClientException(f"Failed to fetch playlist data: {e!s}")
-        
+            raise SpotifyClientException(f"{error_message}: {e!s}")
+
     def _get_default_headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self._get_access_token()}",
