@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.hitster.app.data.SongRepository
 import com.hitster.app.manager.SpotifyManager
 import com.hitster.app.model.Song
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +41,16 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     private val _hardModeDurationSeconds = MutableStateFlow(30)
     val hardModeDurationSeconds: StateFlow<Int> = _hardModeDurationSeconds.asStateFlow()
 
+    private val _remainingMillis = MutableStateFlow(_hardModeDurationSeconds.value * 1000L)
+    val remainingMillis: StateFlow<Long> = _remainingMillis.asStateFlow()
+
+    private val _isTimeUp = MutableStateFlow(false)
+    val isTimeUp: StateFlow<Boolean> = _isTimeUp.asStateFlow()
+
+    private val _isRunning = MutableStateFlow(false)
+    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+
+    private var timerJob: Job? = null
     private val _currentSongIndex = MutableStateFlow(0)
     val currentSong: StateFlow<Song?> = combine(_currentSongIndex, _songs) { index, songsList ->
         if (songsList.isNotEmpty()) songsList[index % songsList.size] else null
@@ -75,12 +87,15 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         if (_isPlaying.value) {
             SpotifyManager.pause()
             _isPlaying.value = false
+            pauseTimer()
         } else {
             if (!isTrackLoaded) {
                 playTrack()
+                startTimer()
             } else {
                 SpotifyManager.resume()
                 _isPlaying.value = true
+                startTimer()
             }
         }
     }
@@ -89,8 +104,10 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         val songsList = _songs.value
         if (songsList.isNotEmpty()) {
             _currentSongIndex.value = (_currentSongIndex.value + 1) % songsList.size
+            _isTimeUp.value = false
             reset()
             playTrack()
+            startTimer()
         }
     }
 
@@ -102,15 +119,21 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         SpotifyManager.seekToRelativePosition(15000)
     }
 
-    fun replay() {
+    fun replay(revealed: Boolean = false) {
         playTrack()
+        if (_gameMode.value == GameMode.HARD && !revealed) {
+            resetTimer()
+            startTimer()
+        }
     }
 
     fun reset() {
         _isPlaying.value = false
+        _isTimeUp.value = false
         SpotifyManager.pause()
         SpotifyManager.resetState()
         isTrackLoaded = false
+        resetTimer()
     }
 
     fun hardReset() {
@@ -118,6 +141,7 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         _songs.value = emptyList()
         _currentSongIndex.value = 0
         _uiState.value = UiState.IDLE
+        resetTimer()
     }
 
     fun setGameMode(mode: GameMode) {
@@ -126,5 +150,49 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun setHardModeDuration(seconds: Int) {
         _hardModeDurationSeconds.value = seconds
+        if (_gameMode.value == GameMode.HARD) {
+            _remainingMillis.value = seconds * 1000L
+        }
+    }
+
+    fun onReveal() {
+        _isTimeUp.value = false
+        if (!_isPlaying.value) {
+            if (!isTrackLoaded) {
+                playTrack()
+            } else {
+                SpotifyManager.resume()
+                _isPlaying.value = true
+            }
+        }
+    }
+
+    private fun startTimer() {
+        if (_gameMode.value != GameMode.HARD) return
+        
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (_remainingMillis.value > 0) {
+                delay(100L)
+                val newValue = _remainingMillis.value - 100L
+                _remainingMillis.value = if (newValue < 0) 0 else newValue
+            }
+            onTimeUp()
+        }
+    }
+
+    private fun pauseTimer() {
+        timerJob?.cancel()
+    }
+
+    private fun resetTimer() {
+        timerJob?.cancel()
+        _remainingMillis.value = _hardModeDurationSeconds.value * 1000L
+    }
+
+    private fun onTimeUp() {
+        _isTimeUp.value = true
+        SpotifyManager.pause()
+        _isPlaying.value = false
     }
 }

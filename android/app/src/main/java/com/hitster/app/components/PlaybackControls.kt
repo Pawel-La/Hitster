@@ -32,8 +32,15 @@ fun PlaybackControls(
     onForward: () -> Unit,
     onReplay: () -> Unit,
     modifier: Modifier = Modifier,
-    isSongFinished: Boolean = false
+    isSongFinished: Boolean = false,
+    isRewindEnabled: Boolean = true,
+    isForwardEnabled: Boolean = true,
+    isPlayPauseEnabled: Boolean = true,
+    isReplayEnabled: Boolean = true
 ) {
+    val disabledColor = Color.Gray
+    val enabledColor = Color.White
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -47,12 +54,15 @@ fun PlaybackControls(
     )
     {
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onReplay) {
+            IconButton(
+                onClick = onReplay,
+                enabled = isReplayEnabled
+            ) {
                 Icon(
                     imageVector = Icons.Default.Replay,
                     contentDescription = "Replay",
                     modifier = Modifier.size(32.dp),
-                    tint = Color.White
+                    tint = if (isReplayEnabled) enabledColor else disabledColor
                 )
             }
         }
@@ -62,44 +72,47 @@ fun PlaybackControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val canRewind = !isSongFinished && isRewindEnabled
             IconButton(
                 onClick = onRewind,
-                enabled = !isSongFinished
+                enabled = canRewind
             ) {
                 Icon(
                     imageVector = Icons.Default.FastRewind,
                     contentDescription = "Rewind",
                     modifier = Modifier.size(40.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (canRewind) enabledColor else disabledColor
                 )
             }
 
             // adjust this width to bring them even closer or further apart
             Spacer(modifier = Modifier.width(10.dp))
 
+            val canPlayPause = !isSongFinished && isPlayPauseEnabled
             IconButton(
                 onClick = onPlayPauseToggle,
-                enabled = !isSongFinished
+                enabled = canPlayPause
             ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = if (isPlaying) "Pause" else "Play",
                     modifier = Modifier.size(160.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (canPlayPause) enabledColor else disabledColor
                 )
             }
 
             Spacer(modifier = Modifier.width(10.dp))
 
+            val canForward = !isSongFinished && isForwardEnabled
             IconButton(
                 onClick = onForward,
-                enabled = !isSongFinished
+                enabled = canForward
             ) {
                 Icon(
                     imageVector = Icons.Default.FastForward,
                     contentDescription = "Forward",
                     modifier = Modifier.size(40.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (canForward) enabledColor else disabledColor
                 )
             }
         }

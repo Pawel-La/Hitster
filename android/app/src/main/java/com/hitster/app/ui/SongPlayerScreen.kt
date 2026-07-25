@@ -15,6 +15,7 @@ import com.hitster.app.components.ExitGameDialog
 import com.hitster.app.components.SpotifyErrorDisplay
 import com.hitster.app.components.LoadingScreen
 import com.hitster.app.components.LoadingErrorScreen
+import com.hitster.app.components.CountdownTimer
 import com.hitster.app.manager.SpotifyManager
 import androidx.activity.compose.BackHandler
 
@@ -28,6 +29,11 @@ fun SongPlayerScreen(
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isSongFinished by viewModel.isSongFinished.collectAsState()
     val currentSong by viewModel.currentSong.collectAsState()
+    val gameMode by viewModel.gameMode.collectAsState()
+    val remainingMillis by viewModel.remainingMillis.collectAsState()
+    val hardModeDurationSeconds by viewModel.hardModeDurationSeconds.collectAsState()
+    val isTimeUp by viewModel.isTimeUp.collectAsState()
+
     val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
     var revealed by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
@@ -76,6 +82,16 @@ fun SongPlayerScreen(
                 }
                 
                 if (uiState == UiState.SUCCESS) {
+                    if (gameMode == GameMode.HARD && !revealed) {
+                        CountdownTimer(
+                            remainingMillis = remainingMillis,
+                            totalDurationMillis = hardModeDurationSeconds * 1000L,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(16.dp)
+                        )
+                    }
+
                     BigButton(
                         text = if (revealed) "Next" else "Skip",
                         onClick = {
@@ -89,7 +105,10 @@ fun SongPlayerScreen(
 
                     BigButton(
                         text = "Reveal",
-                        onClick = { revealed = true },
+                        onClick = { 
+                            revealed = true
+                            viewModel.onReveal()
+                        },
                         modifier = Modifier
                             .align(Alignment.Center)
                             .fillMaxWidth()
@@ -110,7 +129,11 @@ fun SongPlayerScreen(
                         onPlayPauseToggle = { viewModel.togglePlayPause() },
                         onRewind = { viewModel.rewind() },
                         onForward = { viewModel.fastForward() },
-                        onReplay = { viewModel.replay() },
+                        onReplay = { viewModel.replay(revealed) },
+                        isRewindEnabled = !(gameMode == GameMode.HARD && !revealed) && !isTimeUp,
+                        isForwardEnabled = !(gameMode == GameMode.HARD && !revealed) && !isTimeUp,
+                        isPlayPauseEnabled = !isTimeUp,
+                        isReplayEnabled = !isTimeUp,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 32.dp)
