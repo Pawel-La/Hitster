@@ -50,12 +50,18 @@ python -m api.services.get_spotify_refresh_token
 
 ## API
 
-- `GET /api/health/` — returns a simple health check JSON response
-  (`{"status": "ok", "message": "..."}`).
 - `GET /api/playlist/` — returns the songs of the default Spotify playlist.
-  Pass `?playlist_id=<id>` to fetch a different playlist.
-- `GET /api/playlist/<playlist_id>/` — returns the songs of the given Spotify
-  playlist.
+- `GET /api/playlist/<playlist_id>/` — returns the songs of the given Spotify playlist.
+
+Songs are always returned in random order.
+
+### Query parameters
+
+- `count` — target number of songs. If the requested playlist has fewer than `count` songs, it is topped up with songs from a backup playlist to reach `count`; if it already has at least `count`, it is returned as-is. Example: `GET /api/playlist/?count=100`.
+
+### Fill-up behavior
+
+When a playlist is shorter than `count`, songs are bucketed by release-year period, and backup songs matching each period are added so the periods keep roughly the same proportions as the original playlist.
 
 ### Playlist response
 
@@ -77,9 +83,6 @@ Example with Retrofit:
 
 ```kotlin
 interface HitsterApi {
-    @GET("api/health/")
-    suspend fun health(): HealthResponse
-
     @GET("api/playlist/")
     suspend fun playlist(): List<PlaylistSongResponse>
 }
@@ -102,13 +105,6 @@ val retrofit = Retrofit.Builder()
     .build()
 ```
 
-Optionally add delete support to the Android API interface:
-
-```kotlin
-@DELETE("api/songs/{id}/")
-suspend fun deleteSong(@Path("id") id: Int)
-```
-
 ## Notes
 
 - The Android frontend will be placed under `/android`.
@@ -118,4 +114,5 @@ suspend fun deleteSong(@Path("id") id: Int)
 
 ```bash
 curl https://hitstercopywannabe.onrender.com/api/playlist/
+curl https://hitstercopywannabe.onrender.com/api/playlist/[playlist_id]/
 ```
