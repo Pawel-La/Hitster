@@ -24,16 +24,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+data class PlaybackControlState(
+    val isPlaying: Boolean = false,
+    val isRewindEnabled: Boolean = true,
+    val isForwardEnabled: Boolean = true,
+    val isPlayPauseEnabled: Boolean = true,
+    val isReplayEnabled: Boolean = true
+)
+
 @Composable
 fun PlaybackControls(
-    isPlaying: Boolean,
+    state: PlaybackControlState,
     onPlayPauseToggle: () -> Unit,
     onRewind: () -> Unit,
     onForward: () -> Unit,
     onReplay: () -> Unit,
     modifier: Modifier = Modifier,
-    isSongFinished: Boolean = false
 ) {
+    val disabledColor = Color.Gray
+    val enabledColor = Color.White
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -47,12 +57,15 @@ fun PlaybackControls(
     )
     {
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onReplay) {
+            IconButton(
+                onClick = onReplay,
+                enabled = state.isReplayEnabled
+            ) {
                 Icon(
                     imageVector = Icons.Default.Replay,
                     contentDescription = "Replay",
                     modifier = Modifier.size(32.dp),
-                    tint = Color.White
+                    tint = if (state.isReplayEnabled) enabledColor else disabledColor
                 )
             }
         }
@@ -64,13 +77,13 @@ fun PlaybackControls(
         ) {
             IconButton(
                 onClick = onRewind,
-                enabled = !isSongFinished
+                enabled = state.isRewindEnabled
             ) {
                 Icon(
                     imageVector = Icons.Default.FastRewind,
                     contentDescription = "Rewind",
                     modifier = Modifier.size(40.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (state.isRewindEnabled) enabledColor else disabledColor
                 )
             }
 
@@ -79,13 +92,13 @@ fun PlaybackControls(
 
             IconButton(
                 onClick = onPlayPauseToggle,
-                enabled = !isSongFinished
+                enabled = state.isPlayPauseEnabled
             ) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (state.isPlaying) "Pause" else "Play",
                     modifier = Modifier.size(160.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (state.isPlayPauseEnabled) enabledColor else disabledColor
                 )
             }
 
@@ -93,13 +106,13 @@ fun PlaybackControls(
 
             IconButton(
                 onClick = onForward,
-                enabled = !isSongFinished
+                enabled = state.isForwardEnabled
             ) {
                 Icon(
                     imageVector = Icons.Default.FastForward,
                     contentDescription = "Forward",
                     modifier = Modifier.size(40.dp),
-                    tint = if (isSongFinished) Color.Gray else Color.White
+                    tint = if (state.isForwardEnabled) enabledColor else disabledColor
                 )
             }
         }
