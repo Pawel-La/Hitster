@@ -1,9 +1,9 @@
-package com.hitster.app.components
+package com.hitster.app.ui.screens.settings
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.hitster.app.ui.GameMode
+import com.hitster.app.ui.screens.songplayer.GameMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

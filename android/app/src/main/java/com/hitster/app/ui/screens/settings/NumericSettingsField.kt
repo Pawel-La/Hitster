@@ -1,4 +1,4 @@
-package com.hitster.app.components
+package com.hitster.app.ui.screens.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

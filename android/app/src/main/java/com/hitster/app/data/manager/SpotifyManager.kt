@@ -1,4 +1,4 @@
-package com.hitster.app.manager
+package com.hitster.app.data.manager
 
 import android.app.Activity
 import android.content.Context

@@ -1,4 +1,4 @@
-package com.hitster.app.api
+package com.hitster.app.data.api
 
 import retrofit2.http.GET
 import retrofit2.http.Query

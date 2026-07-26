@@ -1,4 +1,4 @@
-package com.hitster.app.ui
+package com.hitster.app.ui.screens.songplayer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -8,15 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hitster.app.components.BigButton
-import com.hitster.app.components.PlaybackControls
-import com.hitster.app.components.RevealPopUp
-import com.hitster.app.components.ExitGameDialog
-import com.hitster.app.components.SpotifyErrorDisplay
-import com.hitster.app.components.LoadingScreen
-import com.hitster.app.components.LoadingErrorScreen
-import com.hitster.app.components.CountdownTimer
-import com.hitster.app.manager.SpotifyManager
+import com.hitster.app.ui.components.BigButton
+import com.hitster.app.ui.components.SpotifyErrorDisplay
+import com.hitster.app.ui.components.LoadingScreen
+import com.hitster.app.ui.components.LoadingErrorScreen
+import com.hitster.app.data.manager.SpotifyManager
 import androidx.activity.compose.BackHandler
 
 @Composable
