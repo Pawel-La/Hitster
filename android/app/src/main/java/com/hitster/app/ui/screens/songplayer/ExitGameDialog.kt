@@ -1,4 +1,4 @@
-package com.hitster.app.components
+package com.hitster.app.ui.screens.songplayer
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text

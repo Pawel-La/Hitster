@@ -1,7 +1,6 @@
 package com.hitster.app.data
 
-import com.hitster.app.api.RetrofitClient
-import com.hitster.app.model.Song
+import com.hitster.app.data.api.RetrofitClient
 import android.util.Log
 
 class SongRepository {

@@ -1,4 +1,4 @@
-package com.hitster.app.ui
+package com.hitster.app.ui.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hitster.app.components.BigButton
-import com.hitster.app.components.GameModeSelector
-import com.hitster.app.components.NumericSettingsField
+import com.hitster.app.ui.screens.songplayer.GameMode
+import com.hitster.app.ui.screens.songplayer.SongPlayerViewModel
+import com.hitster.app.ui.components.BigButton
 
 @Composable
 fun SettingsScreen(

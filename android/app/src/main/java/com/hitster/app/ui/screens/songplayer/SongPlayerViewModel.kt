@@ -1,12 +1,11 @@
-package com.hitster.app.ui
+package com.hitster.app.ui.screens.songplayer
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.hitster.app.components.PlaybackControlState
 import com.hitster.app.data.SongRepository
-import com.hitster.app.manager.SpotifyManager
-import com.hitster.app.model.Song
+import com.hitster.app.data.manager.SpotifyManager
+import com.hitster.app.data.Song
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

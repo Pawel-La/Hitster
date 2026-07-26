@@ -1,4 +1,4 @@
-package com.hitster.app.components
+package com.hitster.app.ui.screens.songplayer
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box

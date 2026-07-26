@@ -1,4 +1,4 @@
-package com.hitster.app.model
+package com.hitster.app.data
 
 data class Song(
     val title: String,
