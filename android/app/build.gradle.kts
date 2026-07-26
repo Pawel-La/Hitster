@@ -40,6 +40,7 @@ android {
 dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+    implementation(libs.coil.compose)
     implementation(files("libs/spotify-app-remote-release-0.8.0.aar"))
     implementation("com.spotify.android:auth:2.1.0")
     implementation("com.google.code.gson:gson:2.14.0")

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.hitster.app.data.SongRepository
 import com.hitster.app.data.manager.SpotifyManager
 import com.hitster.app.data.Song
+import com.hitster.app.data.Playlist
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,10 @@ enum class GameMode {
 class SongPlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = SongRepository()
     
+    init {
+        fetchPlaylists()
+    }
+
     private val _uiState = MutableStateFlow(UiState.IDLE)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
@@ -43,6 +48,12 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _playerCount = MutableStateFlow(10)
     val playerCount: StateFlow<Int> = _playerCount.asStateFlow()
+
+    private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
+    val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+
+    private val _selectedPlaylist = MutableStateFlow<Playlist?>(null)
+    val selectedPlaylist: StateFlow<Playlist?> = _selectedPlaylist.asStateFlow()
 
     private val _remainingMillis = MutableStateFlow(_hardModeDurationSeconds.value * 1000L)
     val remainingMillis: StateFlow<Long> = _remainingMillis.asStateFlow()
@@ -82,13 +93,17 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
 
     private var isTrackLoaded = false
 
+    init {
+        fetchPlaylists()
+    }
+
     fun fetchSongs() {
         if (_uiState.value == UiState.LOADING || _uiState.value == UiState.SUCCESS) return
         
         viewModelScope.launch {
             _uiState.value = UiState.LOADING
             val targetCount = _playerCount.value * 10 + 20
-            val fetchedSongs = repository.loadSongs(targetCount)
+            val fetchedSongs = repository.loadSongs(targetCount, _selectedPlaylist.value?.id)
             if (fetchedSongs.isNotEmpty()) {
                 _songs.value = fetchedSongs
                 _uiState.value = UiState.SUCCESS
@@ -96,6 +111,20 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
                 _uiState.value = UiState.ERROR
             }
         }
+    }
+
+    fun fetchPlaylists() {
+        viewModelScope.launch {
+            val fetchedPlaylists = repository.loadPlaylists()
+            _playlists.value = fetchedPlaylists
+            if (_selectedPlaylist.value == null && fetchedPlaylists.isNotEmpty()) {
+                _selectedPlaylist.value = fetchedPlaylists.first()
+            }
+        }
+    }
+
+    fun setSelectedPlaylist(playlist: Playlist) {
+        _selectedPlaylist.value = playlist
     }
 
     private fun playTrack() {

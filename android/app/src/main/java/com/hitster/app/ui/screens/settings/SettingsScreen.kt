@@ -83,6 +83,18 @@ fun SettingsScreen(
             textStyle = LocalTextStyle.current.copy(fontSize = 24.sp)
         )
 
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val playlists by viewModel.playlists.collectAsState()
+        val selectedPlaylist by viewModel.selectedPlaylist.collectAsState()
+
+        PlaylistSelector(
+            playlists = playlists,
+            selectedPlaylist = selectedPlaylist,
+            onPlaylistSelected = { viewModel.setSelectedPlaylist(it) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        )
+
         Spacer(modifier = Modifier.weight(1f))
 
         BigButton(
