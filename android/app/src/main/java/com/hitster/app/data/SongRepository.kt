@@ -5,9 +5,9 @@ import com.hitster.app.model.Song
 import android.util.Log
 
 class SongRepository {
-    suspend fun loadSongs(): List<Song> {
+    suspend fun loadSongs(count: Int): List<Song> {
         return try {
-            val response = RetrofitClient.instance.getPlaylist()
+            val response = RetrofitClient.instance.getPlaylist(count)
             response.map {
                 Song(
                     title = it.name,

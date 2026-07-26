@@ -42,6 +42,9 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     private val _hardModeDurationSeconds = MutableStateFlow(30)
     val hardModeDurationSeconds: StateFlow<Int> = _hardModeDurationSeconds.asStateFlow()
 
+    private val _playerCount = MutableStateFlow(10)
+    val playerCount: StateFlow<Int> = _playerCount.asStateFlow()
+
     private val _remainingMillis = MutableStateFlow(_hardModeDurationSeconds.value * 1000L)
     val remainingMillis: StateFlow<Long> = _remainingMillis.asStateFlow()
 
@@ -85,7 +88,8 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         
         viewModelScope.launch {
             _uiState.value = UiState.LOADING
-            val fetchedSongs = repository.loadSongs()
+            val targetCount = _playerCount.value * 10 + 20
+            val fetchedSongs = repository.loadSongs(targetCount)
             if (fetchedSongs.isNotEmpty()) {
                 _songs.value = fetchedSongs
                 _uiState.value = UiState.SUCCESS
@@ -176,6 +180,10 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         if (_gameMode.value == GameMode.HARD) {
             _remainingMillis.value = seconds * 1000L
         }
+    }
+
+    fun setPlayerCount(count: Int) {
+        _playerCount.value = count
     }
 
     fun onReveal() {

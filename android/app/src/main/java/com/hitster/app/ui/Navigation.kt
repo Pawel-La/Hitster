@@ -13,11 +13,11 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val viewModel: SongPlayerViewModel = viewModel()
     NavHost(
         navController = navController,
-        startDestination = "before_play",
+        startDestination = "settings",
         modifier = modifier
     ) {
-        composable("before_play") {
-            BeforePlayScreen(
+        composable("settings") {
+            SettingsScreen(
                 onPlayClick = { navController.navigate("song_player") },
                 viewModel = viewModel
             )

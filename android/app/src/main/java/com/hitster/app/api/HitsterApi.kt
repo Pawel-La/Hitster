@@ -1,10 +1,11 @@
 package com.hitster.app.api
 
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 interface HitsterApi {
     @GET("api/playlist/")
-    suspend fun getPlaylist(): List<PlaylistSongResponse>
+    suspend fun getPlaylist(@Query("count") count: Int? = null): List<PlaylistSongResponse>
 }
 
 data class PlaylistSongResponse(
