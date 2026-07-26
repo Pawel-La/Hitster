@@ -3,6 +3,7 @@ package com.hitster.app.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hitster.app.components.PlaybackControlState
 import com.hitster.app.data.SongRepository
 import com.hitster.app.manager.SpotifyManager
 import com.hitster.app.model.Song
@@ -45,18 +46,37 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     val remainingMillis: StateFlow<Long> = _remainingMillis.asStateFlow()
 
     private val _isTimeUp = MutableStateFlow(false)
-    val isTimeUp: StateFlow<Boolean> = _isTimeUp.asStateFlow()
 
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+    private val _isRevealed = MutableStateFlow(false)
+    val isRevealed: StateFlow<Boolean> = _isRevealed.asStateFlow()
+
+    val isSongFinished: StateFlow<Boolean> = SpotifyManager.isSongFinished
+
+    val playbackControlState: StateFlow<PlaybackControlState> = combine(
+        _isPlaying,
+        _gameMode,
+        _isRevealed,
+        _isTimeUp,
+        isSongFinished
+    ) { playing: Boolean, mode: GameMode, revealed: Boolean, timeUp: Boolean, finished: Boolean ->
+        val canRewindForward = !(mode == GameMode.HARD && !revealed) && !timeUp && !finished
+        val canPlayPause = !timeUp && !finished
+        val canReplay = true
+
+        PlaybackControlState(
+            isPlaying = playing,
+            isRewindEnabled = canRewindForward,
+            isForwardEnabled = canRewindForward,
+            isPlayPauseEnabled = canPlayPause,
+            isReplayEnabled = canReplay
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PlaybackControlState())
 
     private var timerJob: Job? = null
     private val _currentSongIndex = MutableStateFlow(0)
     val currentSong: StateFlow<Song?> = combine(_currentSongIndex, _songs) { index, songsList ->
         if (songsList.isNotEmpty()) songsList[index % songsList.size] else null
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val isSongFinished: StateFlow<Boolean> = SpotifyManager.isSongFinished
 
     private var isTrackLoaded = false
 
@@ -105,6 +125,7 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         if (songsList.isNotEmpty()) {
             _currentSongIndex.value = (_currentSongIndex.value + 1) % songsList.size
             _isTimeUp.value = false
+            _isRevealed.value = false
             reset()
             playTrack()
             startTimer()
@@ -119,9 +140,10 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         SpotifyManager.seekToRelativePosition(15000)
     }
 
-    fun replay(revealed: Boolean = false) {
+    fun replay() {
+        _isTimeUp.value = false
         playTrack()
-        if (_gameMode.value == GameMode.HARD && !revealed) {
+        if (_gameMode.value == GameMode.HARD && !_isRevealed.value) {
             resetTimer()
             startTimer()
         }
@@ -130,6 +152,7 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     fun reset() {
         _isPlaying.value = false
         _isTimeUp.value = false
+        _isRevealed.value = false
         SpotifyManager.pause()
         SpotifyManager.resetState()
         isTrackLoaded = false
@@ -156,7 +179,9 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun onReveal() {
+        pauseTimer()
         _isTimeUp.value = false
+        _isRevealed.value = true
         if (!_isPlaying.value) {
             if (!isTrackLoaded) {
                 playTrack()

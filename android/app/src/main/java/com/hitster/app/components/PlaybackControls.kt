@@ -24,19 +24,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+data class PlaybackControlState(
+    val isPlaying: Boolean = false,
+    val isRewindEnabled: Boolean = true,
+    val isForwardEnabled: Boolean = true,
+    val isPlayPauseEnabled: Boolean = true,
+    val isReplayEnabled: Boolean = true
+)
+
 @Composable
 fun PlaybackControls(
-    isPlaying: Boolean,
+    state: PlaybackControlState,
     onPlayPauseToggle: () -> Unit,
     onRewind: () -> Unit,
     onForward: () -> Unit,
     onReplay: () -> Unit,
     modifier: Modifier = Modifier,
-    isSongFinished: Boolean = false,
-    isRewindEnabled: Boolean = true,
-    isForwardEnabled: Boolean = true,
-    isPlayPauseEnabled: Boolean = true,
-    isReplayEnabled: Boolean = true
 ) {
     val disabledColor = Color.Gray
     val enabledColor = Color.White
@@ -56,13 +59,13 @@ fun PlaybackControls(
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
             IconButton(
                 onClick = onReplay,
-                enabled = isReplayEnabled
+                enabled = state.isReplayEnabled
             ) {
                 Icon(
                     imageVector = Icons.Default.Replay,
                     contentDescription = "Replay",
                     modifier = Modifier.size(32.dp),
-                    tint = if (isReplayEnabled) enabledColor else disabledColor
+                    tint = if (state.isReplayEnabled) enabledColor else disabledColor
                 )
             }
         }
@@ -72,47 +75,44 @@ fun PlaybackControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val canRewind = !isSongFinished && isRewindEnabled
             IconButton(
                 onClick = onRewind,
-                enabled = canRewind
+                enabled = state.isRewindEnabled
             ) {
                 Icon(
                     imageVector = Icons.Default.FastRewind,
                     contentDescription = "Rewind",
                     modifier = Modifier.size(40.dp),
-                    tint = if (canRewind) enabledColor else disabledColor
+                    tint = if (state.isRewindEnabled) enabledColor else disabledColor
                 )
             }
 
             // adjust this width to bring them even closer or further apart
             Spacer(modifier = Modifier.width(10.dp))
 
-            val canPlayPause = !isSongFinished && isPlayPauseEnabled
             IconButton(
                 onClick = onPlayPauseToggle,
-                enabled = canPlayPause
+                enabled = state.isPlayPauseEnabled
             ) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (state.isPlaying) "Pause" else "Play",
                     modifier = Modifier.size(160.dp),
-                    tint = if (canPlayPause) enabledColor else disabledColor
+                    tint = if (state.isPlayPauseEnabled) enabledColor else disabledColor
                 )
             }
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            val canForward = !isSongFinished && isForwardEnabled
             IconButton(
                 onClick = onForward,
-                enabled = canForward
+                enabled = state.isForwardEnabled
             ) {
                 Icon(
                     imageVector = Icons.Default.FastForward,
                     contentDescription = "Forward",
                     modifier = Modifier.size(40.dp),
-                    tint = if (canForward) enabledColor else disabledColor
+                    tint = if (state.isForwardEnabled) enabledColor else disabledColor
                 )
             }
         }

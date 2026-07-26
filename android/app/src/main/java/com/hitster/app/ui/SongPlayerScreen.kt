@@ -26,16 +26,14 @@ fun SongPlayerScreen(
     viewModel: SongPlayerViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val isSongFinished by viewModel.isSongFinished.collectAsState()
     val currentSong by viewModel.currentSong.collectAsState()
     val gameMode by viewModel.gameMode.collectAsState()
     val remainingMillis by viewModel.remainingMillis.collectAsState()
     val hardModeDurationSeconds by viewModel.hardModeDurationSeconds.collectAsState()
-    val isTimeUp by viewModel.isTimeUp.collectAsState()
+    val isRevealed by viewModel.isRevealed.collectAsState()
+    val playbackControlState by viewModel.playbackControlState.collectAsState()
 
     val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
-    var revealed by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     BackHandler {
@@ -82,7 +80,7 @@ fun SongPlayerScreen(
                 }
                 
                 if (uiState == UiState.SUCCESS) {
-                    if (gameMode == GameMode.HARD && !revealed) {
+                    if (gameMode == GameMode.HARD && !isRevealed) {
                         CountdownTimer(
                             remainingMillis = remainingMillis,
                             totalDurationMillis = hardModeDurationSeconds * 1000L,
@@ -93,9 +91,8 @@ fun SongPlayerScreen(
                     }
 
                     BigButton(
-                        text = if (revealed) "Next" else "Skip",
+                        text = if (isRevealed) "Next" else "Skip",
                         onClick = {
-                            revealed = false
                             viewModel.nextSong()
                         },
                         modifier = Modifier
@@ -106,7 +103,6 @@ fun SongPlayerScreen(
                     BigButton(
                         text = "Reveal",
                         onClick = { 
-                            revealed = true
                             viewModel.onReveal()
                         },
                         modifier = Modifier
@@ -114,7 +110,7 @@ fun SongPlayerScreen(
                             .fillMaxWidth()
                     )
 
-                    if (revealed && currentSong != null) {
+                    if (isRevealed && currentSong != null) {
                         RevealPopUp(
                             year = currentSong!!.year,
                             artist = currentSong!!.artist,
@@ -124,16 +120,11 @@ fun SongPlayerScreen(
                     }
 
                     PlaybackControls(
-                        isPlaying = isPlaying,
-                        isSongFinished = isSongFinished,
+                        state = playbackControlState,
                         onPlayPauseToggle = { viewModel.togglePlayPause() },
                         onRewind = { viewModel.rewind() },
                         onForward = { viewModel.fastForward() },
-                        onReplay = { viewModel.replay(revealed) },
-                        isRewindEnabled = !(gameMode == GameMode.HARD && !revealed) && !isTimeUp,
-                        isForwardEnabled = !(gameMode == GameMode.HARD && !revealed) && !isTimeUp,
-                        isPlayPauseEnabled = !isTimeUp,
-                        isReplayEnabled = !isTimeUp,
+                        onReplay = { viewModel.replay() },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 32.dp)
