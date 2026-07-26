@@ -4,6 +4,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.constants import (
+    BACKUP_PLAYLIST_ID,
+    DEFAULT_PLAYLIST_ID,
+    DEFAULT_PLAYLIST_SIZE,
+)
 from api.serializers import PlaylistSongSerializer
 from api.services.helpers import process_playlist_items
 from api.services.maybe_fill_up_playlist import maybe_fill_up_playlist
@@ -11,10 +16,6 @@ from api.services.spotify_client import (
     SpotifyClient,
     SpotifyClientException,
 )
-
-DEFAULT_PLAYLIST_ID = "5GsuH4JNT7uiPGSKArlteE"
-BACKUP_PLAYLIST_ID = "1ys4xuhbUv5IjRYWlk8jS4"
-DEFAULT_PLAYLIST_SIZE = 150
 
 
 class PlaylistView(APIView):
