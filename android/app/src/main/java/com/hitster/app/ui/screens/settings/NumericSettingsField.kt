@@ -15,6 +15,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun NumericSettingsField(
@@ -22,7 +23,7 @@ fun NumericSettingsField(
     value: Int,
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    textStyle: TextStyle = LocalTextStyle.current
+    textStyle: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue(value.toString())) }
     var isFocused by remember { mutableStateOf(false) }
@@ -39,7 +40,7 @@ fun NumericSettingsField(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleLarge,
             color = Color.White
         )
 
