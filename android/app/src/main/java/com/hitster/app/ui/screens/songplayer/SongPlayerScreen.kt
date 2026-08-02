@@ -15,6 +15,9 @@ import com.hitster.app.ui.components.LoadingErrorScreen
 import com.hitster.app.data.manager.SpotifyManager
 import androidx.activity.compose.BackHandler
 
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
+
 @Composable
 fun SongPlayerScreen(
     onNavigateBack: () -> Unit,
@@ -31,6 +34,9 @@ fun SongPlayerScreen(
 
     val errorMessage by SpotifyManager.lastErrorMessage.collectAsState()
     var showExitDialog by remember { mutableStateOf(false) }
+    
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     BackHandler {
         showExitDialog = true
@@ -67,7 +73,6 @@ fun SongPlayerScreen(
                 )
             }
             UiState.SUCCESS, UiState.IDLE -> {
-                // Display error message if any (e.g. Spotify connection)
                 errorMessage?.let {
                     SpotifyErrorDisplay(
                         errorMessage = it,
@@ -96,21 +101,24 @@ fun SongPlayerScreen(
                             .fillMaxWidth(0.5f)
                     )
 
-                    BigButton(
-                        text = "Reveal",
-                        onClick = { 
-                            viewModel.onReveal()
-                        },
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .fillMaxWidth()
-                    )
+                    if (!isRevealed) {
+                        BigButton(
+                            text = "Reveal",
+                            onClick = {
+                                viewModel.onReveal()
+                            },
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .fillMaxWidth()
+                        )
+                    }
 
                     if (isRevealed && currentSong != null) {
                         RevealPopUp(
                             year = currentSong!!.year,
                             artist = currentSong!!.artist,
                             title = currentSong!!.title,
+                            isLandscape = isLandscape,
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
@@ -123,7 +131,8 @@ fun SongPlayerScreen(
                         onReplay = { viewModel.replay() },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = 32.dp)
+                            .padding(bottom = if (isLandscape) 8.dp else 32.dp)
+                            .fillMaxWidth(if (isLandscape) 0.6f else 1f)
                     )
                 }
             }
