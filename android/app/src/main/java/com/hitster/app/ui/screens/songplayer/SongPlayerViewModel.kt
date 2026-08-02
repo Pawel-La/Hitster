@@ -235,13 +235,11 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         timerJob = viewModelScope.launch {
             // Wait for audio to actually start playing
             if (isResume) {
-                Log.d("SongPlayerViewModel", "Timer: Resuming, waiting for Spotify audio to start...")
                 while (!SpotifyManager.isActuallyPlaying.value) {
                     delay(100.milliseconds)
                 }
             } else {
                 // Ensure it's at the beginning if we just replayed/skipped
-                Log.d("SongPlayerViewModel", "Timer: Fresh start, waiting for Spotify audio to start at the beginning...")
                 while (!SpotifyManager.isActuallyPlaying.value || SpotifyManager.playbackPosition.value > 1000) {
                     delay(100.milliseconds)
                 }
@@ -249,8 +247,6 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
             
             // Double check reveal state after waiting
             if (_isRevealed.value) return@launch
-
-            Log.d("SongPlayerViewModel", "Timer: Audio started at position ${SpotifyManager.playbackPosition.value}, beginning countdown")
 
             while (_remainingMillis.value > 0) {
                 delay(100.milliseconds)
