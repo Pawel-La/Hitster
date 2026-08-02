@@ -7,6 +7,7 @@ import com.hitster.app.data.SongRepository
 import com.hitster.app.data.manager.SpotifyManager
 import com.hitster.app.data.Song
 import com.hitster.app.data.Playlist
+import android.util.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,10 +93,6 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private var isTrackLoaded = false
-
-    init {
-        fetchPlaylists()
-    }
 
     fun fetchSongs() {
         if (_uiState.value == UiState.LOADING || _uiState.value == UiState.SUCCESS) return

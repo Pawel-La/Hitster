@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hitster.app.ui.screens.songplayer.GameMode
 import com.hitster.app.ui.screens.songplayer.SongPlayerViewModel
 import com.hitster.app.ui.components.BigButton
@@ -25,6 +24,10 @@ fun SettingsScreen(
     val hardModeDuration by viewModel.hardModeDurationSeconds.collectAsState()
     val playerCount by viewModel.playerCount.collectAsState()
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchPlaylists()
+    }
 
     Column(
         modifier = modifier
@@ -42,9 +45,9 @@ fun SettingsScreen(
 
         Text(
             text = "Select Mode",
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
         GameModeSelector(
@@ -68,8 +71,7 @@ fun SettingsScreen(
                 NumericSettingsField(
                     label = "Seconds per song",
                     value = hardModeDuration,
-                    onValueChange = { viewModel.setHardModeDuration(it) },
-                    textStyle = LocalTextStyle.current.copy(fontSize = 18.sp)
+                    onValueChange = { viewModel.setHardModeDuration(it) }
                 )
             }
         }
@@ -79,8 +81,7 @@ fun SettingsScreen(
         NumericSettingsField(
             label = "Number of players",
             value = playerCount,
-            onValueChange = { viewModel.setPlayerCount(it) },
-            textStyle = LocalTextStyle.current.copy(fontSize = 24.sp)
+            onValueChange = { viewModel.setPlayerCount(it) }
         )
 
         Spacer(modifier = Modifier.height(32.dp))

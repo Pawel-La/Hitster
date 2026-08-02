@@ -35,7 +35,7 @@ fun PlaylistSelector(
     ) {
         Text(
             text = "Select Playlist",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleLarge,
             color = Color.White
         )
 
@@ -81,7 +81,7 @@ fun PlaylistSelector(
                 Text(
                     text = selectedPlaylist?.name ?: "No playlist selected",
                     color = Color.White,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -117,16 +117,31 @@ fun PlaylistSelectionDialog(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Select a Playlist",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                LazyColumn {
-                    items(playlists) { playlist ->
-                        PlaylistListItem(
-                            playlist = playlist,
-                            onClick = { onPlaylistSelected(playlist) }
+                if (playlists.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No playlists found.\nCheck if you own any Spotify playlists.",
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            color = Color.Gray
                         )
+                    }
+                } else {
+                    LazyColumn {
+                        items(playlists) { playlist ->
+                            PlaylistListItem(
+                                playlist = playlist,
+                                onClick = { onPlaylistSelected(playlist) }
+                            )
+                        }
                     }
                 }
             }
