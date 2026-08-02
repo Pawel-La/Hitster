@@ -38,9 +38,6 @@ object SpotifyManager {
     private val _playbackPosition = MutableStateFlow(0L)
     val playbackPosition: StateFlow<Long> = _playbackPosition
 
-    private val _isConnected = MutableStateFlow(false)
-    val isConnected: StateFlow<Boolean> = _isConnected
-
     private val _lastErrorMessage = MutableStateFlow<String?>(null)
     val lastErrorMessage: StateFlow<String?> = _lastErrorMessage
 
@@ -102,18 +99,16 @@ object SpotifyManager {
     private fun createConnectionListener(context: Context) = object : Connector.ConnectionListener {
         override fun onConnected(appRemote: SpotifyAppRemote) {
             spotifyAppRemote = appRemote
-            _isConnected.value = true
             _lastErrorMessage.value = null
             Log.d(TAG, "Connected to Spotify successfully!")
             
-            showToast(context, "Connected to Spotify!")
+            showToast(context)
             setupPlayerStateSubscription(appRemote)
         }
 
         override fun onFailure(throwable: Throwable) {
             val errorMsg = throwable.message ?: "Unknown error"
             Log.e(TAG, "Failed to connect to Spotify: $errorMsg", throwable)
-            _isConnected.value = false
             _lastErrorMessage.value = "Connection Failed: $errorMsg"
         }
     }
@@ -151,7 +146,6 @@ object SpotifyManager {
             SpotifyAppRemote.disconnect(it)
             spotifyAppRemote = null
             resetState()
-            _isConnected.value = false
             Log.d(TAG, "Disconnected from Spotify")
         }
     }
@@ -206,19 +200,14 @@ object SpotifyManager {
         spotifyAppRemote?.playerApi?.resume()
     }
 
-    fun seekTo(positionMs: Long) {
-        Log.d(TAG, "Seeking to: $positionMs")
-        spotifyAppRemote?.playerApi?.seekTo(positionMs)
-    }
-
     fun seekToRelativePosition(milliseconds: Long) {
         Log.d(TAG, "Seeking relative: $milliseconds")
         spotifyAppRemote?.playerApi?.seekToRelativePosition(milliseconds)
     }
 
-    private fun showToast(context: Context, message: String) {
+    private fun showToast(context: Context) {
         CoroutineScope(Dispatchers.Main).launch {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Connected to Spotify!", Toast.LENGTH_SHORT).show()
         }
     }
 }

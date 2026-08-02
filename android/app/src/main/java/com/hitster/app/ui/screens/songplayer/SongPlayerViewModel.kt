@@ -10,6 +10,7 @@ import com.hitster.app.data.Playlist
 import android.util.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +40,6 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
 
     private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
     private val _gameMode = MutableStateFlow(GameMode.EASY)
     val gameMode: StateFlow<GameMode> = _gameMode.asStateFlow()
@@ -142,9 +142,12 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
                 playTrack()
                 startTimer()
             } else {
+                SpotifyManager.resetState()
                 SpotifyManager.resume()
                 _isPlaying.value = true
-                startTimer()
+                if (!_isRevealed.value) {
+                    startTimer(isResume = true)
+                }
             }
         }
     }
@@ -225,20 +228,32 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private fun startTimer() {
-        if (_gameMode.value != GameMode.HARD) return
+    private fun startTimer(isResume: Boolean = false) {
+        if (_gameMode.value != GameMode.HARD || _isRevealed.value) return
         
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
-            // Wait for audio to actually start playing AND ensure it's at the beginning if we just replayed/skipped
-            Log.d("SongPlayerViewModel", "Timer: Waiting for Spotify audio to start at the beginning...")
-            while (!SpotifyManager.isActuallyPlaying.value || SpotifyManager.playbackPosition.value > 1000) {
-                delay(100L)
+            // Wait for audio to actually start playing
+            if (isResume) {
+                Log.d("SongPlayerViewModel", "Timer: Resuming, waiting for Spotify audio to start...")
+                while (!SpotifyManager.isActuallyPlaying.value) {
+                    delay(100.milliseconds)
+                }
+            } else {
+                // Ensure it's at the beginning if we just replayed/skipped
+                Log.d("SongPlayerViewModel", "Timer: Fresh start, waiting for Spotify audio to start at the beginning...")
+                while (!SpotifyManager.isActuallyPlaying.value || SpotifyManager.playbackPosition.value > 1000) {
+                    delay(100.milliseconds)
+                }
             }
+            
+            // Double check reveal state after waiting
+            if (_isRevealed.value) return@launch
+
             Log.d("SongPlayerViewModel", "Timer: Audio started at position ${SpotifyManager.playbackPosition.value}, beginning countdown")
 
             while (_remainingMillis.value > 0) {
-                delay(100L)
+                delay(100.milliseconds)
                 val newValue = _remainingMillis.value - 100L
                 _remainingMillis.value = if (newValue < 0) 0 else newValue
             }
@@ -256,6 +271,7 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun onTimeUp() {
+        if (_isRevealed.value) return
         _isTimeUp.value = true
         SpotifyManager.pause()
         _isPlaying.value = false
