@@ -28,6 +28,9 @@ object SpotifyManager {
     private var spotifyAppRemote: SpotifyAppRemote? = null
     private var requestedUri: String? = null
     private var isRequestedTrackStarted = false
+    
+    private var lastLoggedUri: String? = null
+    private var lastLoggedPausedState: Boolean? = null
 
     private val _isSongFinished = MutableStateFlow(false)
     val isSongFinished: StateFlow<Boolean> = _isSongFinished
@@ -82,12 +85,8 @@ object SpotifyManager {
      * Step 3: Connect to the App Remote once authorized.
      */
     fun connect(context: Context) {
-        if (isConnected()) {
-            Log.d(TAG, "Already connected to Spotify")
-            return
-        }
+        if (isConnected()) return
 
-        Log.d(TAG, "Connecting to Spotify with Client ID: $CLIENT_ID")
         _lastErrorMessage.value = "Connecting..."
 
         val connectionParams = ConnectionParams.Builder(CLIENT_ID)
@@ -118,7 +117,12 @@ object SpotifyManager {
     private fun setupPlayerStateSubscription(appRemote: SpotifyAppRemote) {
         appRemote.playerApi.subscribeToPlayerState().setEventCallback { state ->
             val track = state.track
-            Log.d(TAG, "Player State: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}, position=${state.playbackPosition}")
+            
+            if (track?.uri != lastLoggedUri || state.isPaused != lastLoggedPausedState) {
+                Log.d(TAG, "Player State Change: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}")
+                lastLoggedUri = track?.uri
+                lastLoggedPausedState = state.isPaused
+            }
             
             _isActuallyPlaying.value = !state.isPaused && track != null
             _playbackPosition.value = state.playbackPosition
@@ -192,17 +196,14 @@ object SpotifyManager {
     }
 
     fun pause() {
-        Log.d(TAG, "Pausing playback")
         spotifyAppRemote?.playerApi?.pause()
     }
 
     fun resume() {
-        Log.d(TAG, "Resuming playback")
         spotifyAppRemote?.playerApi?.resume()
     }
 
     fun seekToRelativePosition(milliseconds: Long) {
-        Log.d(TAG, "Seeking relative: $milliseconds")
         spotifyAppRemote?.playerApi?.seekToRelativePosition(milliseconds)
     }
 
