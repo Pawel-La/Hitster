@@ -230,6 +230,13 @@ class SongPlayerViewModel(application: Application) : AndroidViewModel(applicati
         
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
+            // Wait for audio to actually start playing AND ensure it's at the beginning if we just replayed/skipped
+            Log.d("SongPlayerViewModel", "Timer: Waiting for Spotify audio to start at the beginning...")
+            while (!SpotifyManager.isActuallyPlaying.value || SpotifyManager.playbackPosition.value > 1000) {
+                delay(100L)
+            }
+            Log.d("SongPlayerViewModel", "Timer: Audio started at position ${SpotifyManager.playbackPosition.value}, beginning countdown")
+
             while (_remainingMillis.value > 0) {
                 delay(100L)
                 val newValue = _remainingMillis.value - 100L

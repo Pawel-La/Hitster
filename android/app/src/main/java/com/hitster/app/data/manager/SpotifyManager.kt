@@ -32,6 +32,12 @@ object SpotifyManager {
     private val _isSongFinished = MutableStateFlow(false)
     val isSongFinished: StateFlow<Boolean> = _isSongFinished
 
+    private val _isActuallyPlaying = MutableStateFlow(false)
+    val isActuallyPlaying: StateFlow<Boolean> = _isActuallyPlaying
+
+    private val _playbackPosition = MutableStateFlow(0L)
+    val playbackPosition: StateFlow<Long> = _playbackPosition
+
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
@@ -115,8 +121,11 @@ object SpotifyManager {
     private fun setupPlayerStateSubscription(appRemote: SpotifyAppRemote) {
         appRemote.playerApi.subscribeToPlayerState().setEventCallback { state ->
             val track = state.track
-            Log.d(TAG, "Player State: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}")
+            Log.d(TAG, "Player State: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}, position=${state.playbackPosition}")
             
+            _isActuallyPlaying.value = !state.isPaused && track != null
+            _playbackPosition.value = state.playbackPosition
+
             if (track != null && requestedUri != null) {
                 handleAutoplayDetection(track, state.isPaused)
             }
@@ -151,6 +160,7 @@ object SpotifyManager {
         requestedUri = null
         isRequestedTrackStarted = false
         _isSongFinished.value = false
+        _isActuallyPlaying.value = false
     }
 
     fun play(uri: String) {
