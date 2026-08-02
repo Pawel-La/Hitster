@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,11 +31,15 @@ fun RevealPopUp(
     year: Int,
     artist: String,
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLandscape: Boolean = false
 ) {
     Surface(
         modifier = modifier
-            .fillMaxWidth(0.9f)
+            .then(
+                if (isLandscape) Modifier.fillMaxHeight(0.85f)
+                else Modifier.fillMaxWidth(0.85f)
+            )
             .aspectRatio(1f),
         shape = RoundedCornerShape(16.dp),
         color = Purple80,
@@ -43,43 +48,43 @@ fun RevealPopUp(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(if (isLandscape) 12.dp else 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = year.toString(),
                 style = TextStyle(
-                    fontSize = 80.sp,
+                    fontSize = if (isLandscape) 50.sp else 80.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 4.dp else 16.dp))
 
             Text(
                 text = title,
                 style = TextStyle(
-                    fontSize = 26.sp,
+                    fontSize = if (isLandscape) 20.sp else 26.sp,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 ),
-                maxLines = 3,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
             Text(
                 text = artist,
                 style = TextStyle(
-                    fontSize = 22.sp,
+                    fontSize = if (isLandscape) 18.sp else 22.sp,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 ),
-                maxLines = 3,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }

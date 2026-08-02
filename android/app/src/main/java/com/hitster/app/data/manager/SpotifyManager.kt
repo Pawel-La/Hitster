@@ -76,11 +76,13 @@ object SpotifyManager {
         }
     }
 
+    fun isConnected(): Boolean = spotifyAppRemote?.isConnected == true
+
     /**
      * Step 3: Connect to the App Remote once authorized.
      */
     fun connect(context: Context) {
-        if (spotifyAppRemote?.isConnected == true) {
+        if (isConnected()) {
             Log.d(TAG, "Already connected to Spotify")
             return
         }
@@ -93,7 +95,7 @@ object SpotifyManager {
             .showAuthView(true)
             .build()
 
-        SpotifyAppRemote.connect(context, connectionParams, createConnectionListener(context))
+        SpotifyAppRemote.connect(context.applicationContext, connectionParams, createConnectionListener(context.applicationContext))
     }
 
     private fun createConnectionListener(context: Context) = object : Connector.ConnectionListener {
@@ -132,8 +134,6 @@ object SpotifyManager {
             isRequestedTrackStarted = true
             _isSongFinished.value = false
         } else if (isRequestedTrackStarted && !isPaused) {
-            // Track changed after it had started, and it's not paused.
-            // This is likely Spotify's Autoplay kicking in.
             pause()
             isRequestedTrackStarted = false
             _isSongFinished.value = true
@@ -146,6 +146,7 @@ object SpotifyManager {
             SpotifyAppRemote.disconnect(it)
             spotifyAppRemote = null
             resetState()
+            _lastErrorMessage.value = null
             Log.d(TAG, "Disconnected from Spotify")
         }
     }

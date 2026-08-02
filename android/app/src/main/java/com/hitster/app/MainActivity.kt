@@ -24,8 +24,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        // Step 1: Start the Auth Flow
-        SpotifyManager.authorize(this, spotifyAuthLauncher)
+        
+        if (!SpotifyManager.isConnected()) {
+            SpotifyManager.authorize(this, spotifyAuthLauncher)
+        }
         
         enableEdgeToEdge()
         setContent {
@@ -39,6 +41,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        SpotifyManager.disconnect()
+        if (!isChangingConfigurations) {
+            SpotifyManager.disconnect()
+        }
     }
 }
