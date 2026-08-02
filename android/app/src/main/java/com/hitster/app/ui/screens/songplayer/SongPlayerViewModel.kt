@@ -7,7 +7,6 @@ import com.hitster.app.data.SongRepository
 import com.hitster.app.data.manager.SpotifyManager
 import com.hitster.app.data.Song
 import com.hitster.app.data.Playlist
-import android.util.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
