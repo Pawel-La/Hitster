@@ -29,7 +29,6 @@ object SpotifyManager {
     private var requestedUri: String? = null
     private var isRequestedTrackStarted = false
     
-    // For logging control
     private var lastLoggedUri: String? = null
     private var lastLoggedPausedState: Boolean? = null
 
@@ -119,7 +118,6 @@ object SpotifyManager {
         appRemote.playerApi.subscribeToPlayerState().setEventCallback { state ->
             val track = state.track
             
-            // Only log if the track or pause state changed to avoid spamming the log during playback
             if (track?.uri != lastLoggedUri || state.isPaused != lastLoggedPausedState) {
                 Log.d(TAG, "Player State Change: track=${track?.name}, uri=${track?.uri}, isPaused=${state.isPaused}")
                 lastLoggedUri = track?.uri
